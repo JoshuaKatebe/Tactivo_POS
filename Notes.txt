@@ -1,0 +1,111 @@
+
+Sales and transaction reports: Summarize sales by pump, product, and time period (e.g., daily or shift-wise), and track individual transactions, including credit sales and payments.
+Fuel inventory reports: Monitor real-time fuel levels in tanks, track fuel usage, and manage stock received from tankers to prevent discrepancies and losses.
+Financial and accounting reports: Track daily collections, manage accounts receivable and payable, and provide overall financial statements to ensure profitability.
+Pump and meter readings: Record and report on dispenser meter readings to verify fuel dispensed against sales and inventory levels.
+Employee and shift reports: Track employee performance and manage shifts, including monitoring daily collections and payroll.
+Credit sales reports: Track and manage all credit sales, often including details like the vehicle number and customer information. 
+
+BACKOFFICECONFIG
+        [TerminalId]
+      ,[TagReaderPresent]
+      ,[TagReaderPort]
+      ,[TagReaderType]
+      ,[StatementPrinterPresent]
+      ,[StatementPrinterPort]
+      ,[AccessDebtors]
+      ,[AccessStock]
+      ,[AccessAttendants]
+      ,[AccessInvoicing]
+      ,[AccessPayments]
+      ,[AccessOrders]
+      ,[AccessGRV]
+      ,[AccessTankToTankTransfer]
+      ,[StatementPrintAllDetail]
+      ,[StatementPrintItemDetail]
+      ,[StatementPrintFuelDetail]
+      ,[StatementPrintCons]
+      ,[BackOfficeReportPath]
+      ,[BackOfficeComboSearchDelay]
+      ,[DatabaseSelectionIniPath]
+      ,[AllowDebtorPayments]
+      ,[AllowDebtorCredits]
+      ,[AllowDebtorGeneralInvoicing]
+      ,[UniqueId]
+	  
+ATG_TANK_LEVELS
+       [tDate]
+      ,[ATGType]
+      ,[AlarmCode]
+      ,[Tank]
+      ,[Ullage]
+      ,[ProductHeight]
+      ,[WaterHeight]
+      ,[WaterVolume]
+      ,[ProductVolume]
+      ,[Temperature]
+      ,[RecalVolume]
+      ,[EmptyVolume]
+      ,[Date]
+      ,[Time]
+      ,[TheoreticalLevel]
+      ,[UniqueID]
+BACKOFFICELIMITS Debtors
+        [Limited]
+      ,[DebtorsAllowed]
+      ,[DebtorsVehiclesAllowed]
+      ,[UniqueId]
+
+BACKOFFICEUUSER
+      [IdUser]
+      ,[Name]
+      ,[Login]
+      ,[Password]
+      ,[Email]
+      ,[UPrivileges]
+      ,[Skin]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      On the pump tab name it to Forecourt 
+      under dashboard 
+      change Pump status to Interactive cashier dashboard 
+      to display alarts on Attendant pump sales limit transaction, Fuel level alarms, Pump errors, Printer errors,
+      Cash in drawer limit alarts, instore product expired, Slow moving products. Tab to view store cctv. Change the tank Visualization to show
+      Water level, Ullage, tank height, Product volume, Product name. 
+      Under Forecourt make provision to quick clear pump sales by filtering the Attendant and quick cash.
+      Pos tab change it to C-store
+      Add Category eg Bakery, Food, Grocery, Lubricants, LP, Accesories. Fuel Tab should direct the cashier to Forecourt
+
+      NEW CHANGES
+      U.P should be changed to Unit Price
+      Dec to Item Name
+      BC to Code
+      Tot to Total
+
+      On buttons replace Print with Check Price buttons
+      Clear Button should be replaced by Alarts Buttons
+
+      The quick clear fuction should Disply all pump sales for example Bob sales and cashier can select all sales or 
+      1 particluar sale and add it to cart. 
+      Safedrop function should show another page with denomination like bank slip.
+When you click on the pump it should disply all the sales on the pump 
+

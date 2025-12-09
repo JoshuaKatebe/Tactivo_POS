@@ -1,0 +1,96 @@
+⚙️ 1. CORE DEPENDENCIES
+
+Run these from your project root:
+
+npm install react-router-dom @tanstack/react-query @supabase/supabase-js
+
+Why:
+
+react-router-dom → For routing (Dashboard, Login, Fuel, Stock pages)
+
+@tanstack/react-query → Data fetching + caching (great with Supabase)
+
+@supabase/supabase-js → SDK to connect to your Supabase project
+
+🎨 2. UI & ICONS
+npm install lucide-react classnames
+
+Why:
+
+lucide-react → Clean icons (e.g., fuel pump, products, settings)
+
+classnames → For conditional Tailwind class management
+
+🧩 3. COMPONENT LIBRARY (Optional but Recommended)
+
+We’ll use shadcn/ui components — built on top of Radix UI, styled with Tailwind.
+Run this setup command:
+
+npx shadcn@latest init
+
+
+Then install required peer dependencies:
+
+npm install clsx tailwind-variants radix-ui react-hook-form
+
+
+After that, you can generate components as needed:
+
+npx shadcn@latest add button card input dialog table
+
+Why:
+
+They give you:
+
+ready-to-use Button, Card, Dialog, Table components
+
+consistent styling with your Tailwind theme
+
+📊 4. DATA VISUALIZATION (Dashboard Charts)
+npm install recharts
+
+Why:
+
+For building charts like:
+
+daily fuel sales
+
+tank volume gauges
+
+top-selling stock items
+
+🌀 5. ANIMATIONS
+npm install framer-motion
+
+Why:
+
+To add smooth transitions in modals, charts, and dashboards.
+
+🔑 6. AUTHENTICATION HELPER (optional now)
+npm install jotai
+
+Why:
+
+A lightweight global state manager — perfect for holding user auth/session info from Supabase.
+
+We’ll use it to store the logged-in user profile, role, and station context.
+
+🧠 7. DEV UTILITIES (optional but useful)
+npm install eslint prettier --save-dev
+
+Why:
+
+Keeps your code clean and consistent — especially when project scales.
+
+Then initialize them:
+
+npx eslint --init
+
+🧭 8. VERIFY INSTALLS
+
+Once all commands are done, check everything installed correctly:
+
+npm list --depth=0
+
+tactivoDB.v1
+tactivov1DB
