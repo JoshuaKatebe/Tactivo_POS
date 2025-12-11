@@ -38,10 +38,10 @@ export const FuelProvider = ({ children }) => {
         }
     };
 
-    // Initial Data Fetch
-    useEffect(() => {
-        fetchData();
-    }, []);
+    // Initial Data Fetch - DISABLED for Demo Mode
+    // useEffect(() => {
+    //     fetchData();
+    // }, []);
 
     // DUMMY STATE for Pumps (Linked to Simulator)
     const [dummyPumps, setDummyPumps] = useState(() => {

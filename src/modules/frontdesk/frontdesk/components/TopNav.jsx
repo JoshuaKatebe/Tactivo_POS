@@ -57,7 +57,7 @@ export default function TopNav({ selectedNav, setSelectedNav, status = {} }) {
             {/* Logo */}
             <div className="flex items-center gap-2 sm:gap-3">
               <Radio className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              <span className="font-semibold text-base sm:text-lg truncate">Tactivo POS</span>
+              <span className="font-semibold text-base sm:text-lg truncate">Z360 POS</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -70,10 +70,9 @@ export default function TopNav({ selectedNav, setSelectedNav, status = {} }) {
                     key={item.id}
                     onClick={() => handleNavClick(item)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-1
-                      ${
-                        active
-                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300"
-                          : "text-slate-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                      ${active
+                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300"
+                        : "text-slate-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
                       }`}
                     aria-current={active ? "page" : undefined}
                   >
@@ -89,7 +88,7 @@ export default function TopNav({ selectedNav, setSelectedNav, status = {} }) {
           <div className="flex items-center gap-3">
             {/* Status Badges */}
             <div className="hidden sm:flex items-center gap-2">
-              <StatusBadge label="PTS2" ok={status.pts2} Icon={Server} />
+              <StatusBadge label="Z360" ok={status.pts2} Icon={Server} />
               <StatusBadge label="Payment" ok={status.payment} Icon={CreditCard} />
               <StatusBadge label="Network" ok={status.network} Icon={Wifi} />
             </div>
@@ -119,10 +118,9 @@ export default function TopNav({ selectedNav, setSelectedNav, status = {} }) {
                   key={item.id}
                   onClick={() => handleNavClick(item)}
                   className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-md transition focus:outline-none
-                    ${
-                      active
-                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300"
-                        : "text-slate-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700"
+                    ${active
+                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300"
+                      : "text-slate-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700"
                     }`}
                 >
                   <Icon className="w-5 h-5" />

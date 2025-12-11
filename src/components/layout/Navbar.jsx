@@ -28,7 +28,7 @@ export default function Navbar({ onToggleSidebar }) {
         </Button>
 
         <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
-          TACTIVO POS
+          Z360 POS
         </span>
       </div>
 

@@ -65,8 +65,8 @@ export default function TopNav({ selectedNav, setSelectedNav, status = {} }) {
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-lg sm:text-xl text-white tracking-tight">Tactivo</span>
-                <span className="text-xs text-blue-400 font-medium -mt-1">POS System</span>
+                <span className="font-bold text-lg sm:text-xl text-white tracking-tight">Z360</span>
+                <span className="text-xs text-blue-400 font-medium -mt-1">POS</span>
               </div>
             </div>
 
@@ -98,7 +98,7 @@ export default function TopNav({ selectedNav, setSelectedNav, status = {} }) {
           <div className="flex items-center gap-3">
             {/* Status Badges */}
             <div className="hidden sm:flex items-center gap-2 bg-slate-800/50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
-              <StatusBadge label="PTS2" ok={status.pts2} Icon={Server} />
+              <StatusBadge label="Z360" ok={status.pts2} Icon={Server} />
               <StatusBadge label="Payment" ok={status.payment} Icon={CreditCard} />
               <StatusBadge label="Network" ok={status.network} Icon={Wifi} />
             </div>

@@ -242,23 +242,6 @@ export default function PumpSimulator() {
                     }
                 }
 
-                // Sync with Global Context for Pumps Page
-                const fuelName = fuelTypes.find(f => f.id === prev.fuelType)?.name || '';
-                const employeeName = attendant?.employee?.first_name || 'Attendant';
-
-                updatePumpStatus(prev.pumpNumber, {
-                    Pump: prev.pumpNumber,
-                    State: finished ? 'Finished' : 'Filling', // PTS State
-                    Status: finished ? 'Finished' : 'Filling',
-                    Nozzle: prev.nozzleNumber,
-                    Volume: newVolume,
-                    Amount: newAmount,
-                    Price: prev.price,
-                    FuelGradeName: fuelName,
-                    User: employeeName,
-                    Transaction: 99999 // Dummy Transaction ID required by PumpsPage active detection
-                });
-
                 return {
                     ...prev,
                     volume: newVolume,
@@ -270,6 +253,31 @@ export default function PumpSimulator() {
 
         return () => clearInterval(interval);
     }, [activeTransaction?.status]);
+
+    // Sync active transaction with Global Context (Separate Effect to avoid React Warning)
+    useEffect(() => {
+        if (!activeTransaction) return;
+
+        const fuelName = fuelTypes.find(f => f.id === activeTransaction.fuelType)?.name || '';
+        const employeeName = attendant?.employee?.first_name || 'Attendant';
+        const isComplete = activeTransaction.status === 'Complete';
+
+        // Don't sync if just completed (will be handled by finalize)
+        if (isComplete) return;
+
+        updatePumpStatus(activeTransaction.pumpNumber, {
+            Pump: activeTransaction.pumpNumber,
+            State: activeTransaction.status === 'Filling' ? 'Filling' : 'Authorized',
+            Status: activeTransaction.status === 'Filling' ? 'Filling' : 'Authorized',
+            Nozzle: activeTransaction.nozzleNumber,
+            Volume: activeTransaction.volume,
+            Amount: activeTransaction.amount,
+            Price: activeTransaction.price,
+            FuelGradeName: fuelName,
+            User: employeeName,
+            Transaction: 99999
+        });
+    }, [activeTransaction, updatePumpStatus, fuelTypes, attendant]);
 
     // Handle finalize transaction (Manual Local Update ONLY)
     async function handleFinalizeTransaction() {
