@@ -37,16 +37,83 @@ function generateTrendWithDeliveries(baseVolume, deliveries = []) {
 export default function Tanks() {
   const { tanks: tanksData, loading } = useFuel();
 
+  // Dummy Data State
+  const [dummyTanks, setDummyTanks] = useState([
+    {
+      Tank: 1,
+      ProductName: "Petrol",
+      Capacity: 25000,
+      ProductVolume: 14250, // 57%
+      ProductHeight: 1200,
+      WaterHeight: 0,
+      Temperature: 24.5,
+      TankFillingPercentage: 57,
+      AlarmCode: "OK",
+      UniqueID: "TK-1"
+    },
+    {
+      Tank: 2,
+      ProductName: "Diesel",
+      Capacity: 25000,
+      ProductVolume: 17750, // 71%
+      ProductHeight: 1500,
+      WaterHeight: 0,
+      Temperature: 23.8,
+      TankFillingPercentage: 71,
+      AlarmCode: "OK",
+      UniqueID: "TK-2"
+    },
+    {
+      Tank: 3,
+      ProductName: "Premium",
+      Capacity: 20000,
+      ProductVolume: 2000, // Starts low
+      ProductHeight: 200,
+      WaterHeight: 0,
+      Temperature: 24.0,
+      TankFillingPercentage: 10,
+      AlarmCode: "LOW LEVEL", // Initially low
+      UniqueID: "TK-3"
+    }
+  ]);
+
+  // Refueling Simulation for Tank 3
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDummyTanks(prev => prev.map(t => {
+        if (t.Tank === 3) {
+          // Increment volume
+          const fillRate = 50; // Liters per tick
+          let newVol = t.ProductVolume + fillRate;
+          if (newVol > t.Capacity) newVol = 2000; // Reset loop
+
+          const newPercent = Math.round((newVol / t.Capacity) * 100);
+
+          return {
+            ...t,
+            ProductVolume: newVol,
+            TankFillingPercentage: newPercent,
+            ProductHeight: Math.round(newVol / 10), // Rough calc
+            AlarmCode: newPercent < 15 ? "LOW LEVEL" : (newPercent > 95 ? "OVERFILL" : "OK")
+          };
+        }
+        return t;
+      }));
+    }, 500); // Update every 500ms
+
+    return () => clearInterval(interval);
+  }, []);
+
   const tanks = useMemo(() => {
-    return Object.values(tanksData || {}).sort((a, b) => (a.Tank || a.Probe || 0) - (b.Tank || b.Probe || 0)).map(t => {
+    return dummyTanks.map(t => {
       // Estimate capacity if not provided
-      const capacity = t.Capacity || (t.ProductVolume && t.TankFillingPercentage ? (t.ProductVolume / (t.TankFillingPercentage / 100)) : null) || 10000;
+      const capacity = t.Capacity || 10000;
       const productVolume = t.ProductVolume || 0;
       const ullage = capacity - productVolume;
 
       return {
-        Tank: t.Tank || t.Probe || 0,
-        ProductName: t.FuelGradeName || "Fuel",
+        Tank: t.Tank,
+        ProductName: t.ProductName,
         ProductVolume: productVolume,
         ProductHeight: t.ProductHeight || 0,
         WaterHeight: t.WaterHeight || 0,
@@ -54,19 +121,19 @@ export default function Tanks() {
         TankFillingPercentage: t.TankFillingPercentage || 0,
         Capacity: capacity,
         Ullage: ullage,
-        EmptyVolume: 0, // Empty volume is typically 0 or a small calibration value
-        TheoreticalLevel: productVolume, // Use actual volume as theoretical for now
-        ATGType: "ATG", // Static for now
-        AlarmCode: "OK", // Todo: derive from status flags if available
+        EmptyVolume: 0,
+        TheoreticalLevel: productVolume,
+        ATGType: "ATG",
+        AlarmCode: t.AlarmCode,
         Date: new Date().toLocaleDateString(),
         Time: new Date().toLocaleTimeString(),
-        UniqueID: `TK-${t.Tank || t.Probe || 0}`,
-        deliveries: [] // No delivery data in API yet
+        UniqueID: t.UniqueID,
+        deliveries: []
       };
     });
-  }, [tanksData]);
+  }, [dummyTanks]);
 
-  if (loading && tanks.length === 0) {
+  if (loading && tanks.length === 0 && false) { // Disable loading check for dummy data
     return <div className="p-8 text-center">Loading Tank Data...</div>;
   }
 

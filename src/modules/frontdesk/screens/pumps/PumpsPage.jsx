@@ -17,152 +17,59 @@ export default function PumpsPage({ initialPumps = null, onClearTransaction = nu
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load pump configurations and transactions from API
+  // Load pump configurations (DUMMY LOCAL VERSION)
   useEffect(() => {
     const loadPumps = async () => {
-      if (!currentStation?.id) {
-        // No station selected - show empty pumps (idle state)
-        setPumps([]);
-        setLoading(false);
-        return;
+      setLoading(true);
+      setError(null);
+
+      // Simulate network delay slightly for realism (optional)
+      await new Promise(r => setTimeout(r, 500));
+
+      // Generate 20 Dummy Pump Configs
+      const dummyConfigs = [];
+      const fuelGrades = [
+        { id: 1, name: 'Petrol', price: 29.92 },
+        { id: 2, name: 'Diesel', price: 26.98 }
+      ];
+
+      for (let i = 1; i <= 20; i++) {
+        dummyConfigs.push({
+          id: `pump-${i}`,
+          name: `Pump ${i}`,
+          grade: 'Multi', // Display generic or specific
+          price: 0, // Varies by nozzle
+          pump_number: i,
+          nozzles: [
+            {
+              number: 1,
+              status: "idle",
+              currentSale: 0,
+              currentLiters: 0,
+              attendant: null,
+              grade: 'Petrol',
+              price: 29.92
+            },
+            {
+              number: 2,
+              status: "idle",
+              currentSale: 0,
+              currentLiters: 0,
+              attendant: null,
+              grade: 'Diesel',
+              price: 26.98
+            },
+          ],
+          transactions: [], // Start with empty transactions for demo
+        });
       }
 
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch pump configurations, transactions, AND fuel grades
-        const [pumpConfigs, transactions, gradesResponse] = await Promise.all([
-          pumpsApi.getAll({
-            station_id: currentStation.id,
-            active: true,
-          }),
-          fuelTransactionsApi.getAll({
-            station_id: currentStation.id,
-            synced: false,
-            limit: 1000,
-          }),
-          fuelApi.getFuelGrades()
-        ]);
-
-        const fuelGrades = gradesResponse?.data?.FuelGrades || [];
-        let transformedPumps = [];
-
-        // If we have pump configurations in the database, use them
-        if (pumpConfigs && pumpConfigs.length > 0) {
-          // Transform API data to match UI structure
-          transformedPumps = pumpConfigs.map((pumpConfig) => {
-            // Determine price from centralized fuel grades configuration
-            const grade = pumpConfig.grade || "Unknown";
-            const matchingGrade = fuelGrades.find(g =>
-              g.Name.toLowerCase() === grade.toLowerCase() ||
-              grade.toLowerCase().includes(g.Name.toLowerCase())
-            );
-            const currentPrice = matchingGrade ? matchingGrade.Price : (pumpConfig.price || 0);
-
-            // Get transactions for this pump
-            const pumpTransactions = transactions.filter(
-              (tx) => tx.pump_id === pumpConfig.id || tx.pump_number === pumpConfig.pump_number
-            );
-
-            // Transform transactions to match UI format
-            const formattedTransactions = pumpTransactions.map((tx) => ({
-              id: tx.id,
-              nozzle: tx.nozzle_number || tx.nozzle || 1,
-              amount: parseFloat(tx.amount || tx.total_amount || 0),
-              volume: parseFloat(tx.volume || tx.liters || 0),
-              time: tx.created_at ? new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--:--',
-              status: tx.synced ? "cleared" : "pending",
-              attendant: tx.attendant || tx.employee_name || "Unknown",
-              pricePerL: tx.price_per_liter || currentPrice || 0,
-            }));
-
-            // Get nozzle configurations
-            const nozzles = (pumpConfig.nozzles || []).map((nozzle) => {
-              // Find current transaction for this nozzle
-              const currentTx = formattedTransactions.find(
-                (t) => t.nozzle === nozzle.number && t.status === "pending"
-              );
-
-              // Initial status - will be updated by live statuses
-              return {
-                number: nozzle.number,
-                status: currentTx ? "filling" : "idle", // Default, will be overridden by live status
-                currentSale: currentTx?.amount || 0,
-                currentLiters: currentTx?.volume || 0,
-                attendant: currentTx?.attendant || null,
-              };
-            });
-
-            return {
-              id: pumpConfig.id,
-              name: pumpConfig.name || `Pump ${pumpConfig.pump_number}`,
-              grade: grade,
-              price: currentPrice || 0,
-              pump_number: pumpConfig.pump_number, // Store for live status matching
-              nozzles: nozzles.length > 0 ? nozzles : [
-                { number: 1, status: "idle", currentSale: 0, currentLiters: 0, attendant: null },
-                { number: 2, status: "idle", currentSale: 0, currentLiters: 0, attendant: null },
-              ],
-              transactions: formattedTransactions,
-            };
-          });
-        } else if (liveStatuses && Object.keys(liveStatuses).length > 0) {
-          // FALLBACK: No database configs, but live status data is available
-          // Generate pump configurations from live status data
-          console.log("No pump configurations in database. Generating from live status data...");
-
-          transformedPumps = Object.keys(liveStatuses).map((pumpKey) => {
-            const liveStatus = liveStatuses[pumpKey];
-            const pumpNumber = parseInt(pumpKey);
-
-            // Determine nozzles from live data
-            // If there's an active nozzle, include it; otherwise default to 2 nozzles
-            const activeNozzle = liveStatus.Nozzle || 0;
-            const lastNozzle = liveStatus.LastNozzle || 0;
-            const maxNozzle = Math.max(activeNozzle, lastNozzle, 2);
-
-            const nozzles = [];
-            for (let i = 1; i <= maxNozzle; i++) {
-              nozzles.push({
-                number: i,
-                status: "idle", // Will be updated by live status merge
-                currentSale: 0,
-                currentLiters: 0,
-                attendant: null,
-              });
-            }
-
-            // Extract fuel grade and price from live data
-            const fuelGrade = liveStatus.FuelGradeName || liveStatus.LastFuelGradeName || "Unknown";
-            const price = liveStatus.Price || liveStatus.LastPrice || 0;
-
-            return {
-              id: `pump-${pumpNumber}`,
-              name: `Pump ${pumpNumber}`,
-              grade: fuelGrade,
-              price: price,
-              pump_number: pumpNumber,
-              nozzles: nozzles,
-              transactions: [], // No transaction history without database
-            };
-          });
-        }
-
-        // Set pumps (could be from database, from live data, or empty)
-        setPumps(transformedPumps);
-      } catch (err) {
-        console.error("Error loading pumps:", err);
-        setError(err.message || "Failed to load pumps");
-        // Don't use mock data on error - show empty pumps (idle state)
-        setPumps([]);
-      } finally {
-        setLoading(false);
-      }
+      setPumps(dummyConfigs);
+      setLoading(false);
     };
 
     loadPumps();
-  }, [currentStation?.id]);
+  }, []);
 
   // Use global FuelContext for live statuses
   const { pumps: liveStatuses, loading: liveLoading, authorizePump, stopPump, emergencyStop } = useFuel();

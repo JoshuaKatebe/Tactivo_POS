@@ -11,7 +11,7 @@ import { LogOut, Play, CheckCircle, Loader2, Droplet, DollarSign, Gauge } from '
 
 export default function PumpSimulator() {
     const { currentStation } = useStation();
-    const { pumps: liveStatuses } = useFuel();
+    const { pumps: liveStatuses, updatePumpStatus } = useFuel(); // Import updatePumpStatus
 
     // Attendant and shift state
     const [attendant, setAttendant] = useState(null);
@@ -38,88 +38,36 @@ export default function PumpSimulator() {
 
     const darkMode = false; // Get from theme context if available
 
-    // Load pump configurations from server
+    // Load pump configurations (Hardcoded for Simulator)
     useEffect(() => {
         const loadPumpConfigs = async () => {
-            if (!currentStation?.id) {
-                setLoadingPumps(false);
-                return;
-            }
-
-            try {
-                setLoadingPumps(true);
-                const [configs, gradesResponse] = await Promise.all([
-                    pumpsApi.getAll({
-                        station_id: currentStation.id,
-                        active: true,
-                    }),
-                    fuelApi.getFuelGrades()
-                ]);
-
-                setPumpConfigs(configs || []);
-                const fuelGrades = gradesResponse?.data?.FuelGrades || [];
-                const fuelTypeMap = new Map();
-
-                // Helper to add fuel type to map
-                const addFuelType = (grade, nozzleNumber, configPrice) => {
-                    const gradeName = grade || 'Unknown';
-                    // Find matching fuel grade from configuration API
-                    const matchingGrade = fuelGrades.find(g =>
-                        g.Name.toLowerCase() === gradeName.toLowerCase() ||
-                        gradeName.toLowerCase().includes(g.Name.toLowerCase())
-                    );
-
-                    const price = matchingGrade ? matchingGrade.Price : (configPrice || 0);
-
-                    if (!fuelTypeMap.has(gradeName)) {
-                        fuelTypeMap.set(gradeName, {
-                            id: gradeName.toLowerCase().replace(/\s+/g, '_'),
-                            name: gradeName,
-                            nozzle: nozzleNumber,
-                            price: price,
-                            color: getFuelColor(gradeName),
-                            fuelGradeId: matchingGrade?.Id || null,
-                        });
-                    }
-                };
-
-                // Strategy 1: Build from database configs
-                if (configs && configs.length > 0) {
-                    configs.forEach((pumpConfig) => {
-                        (pumpConfig.nozzles || []).forEach((nozzle) => {
-                            addFuelType(pumpConfig.grade, nozzle.number, pumpConfig.price);
-                        });
-                    });
+            // Hardcoded fuel types as requested
+            const hardcodedFuels = [
+                {
+                    id: 'petrol',
+                    name: 'Petrol',
+                    nozzle: 1,
+                    price: 29.92,
+                    color: 'blue',
+                    fuelGradeId: 'hardcoded-petrol'
+                },
+                {
+                    id: 'diesel',
+                    name: 'Diesel',
+                    nozzle: 2,
+                    price: 26.98,
+                    color: 'amber',
+                    fuelGradeId: 'hardcoded-diesel'
                 }
-                // Strategy 2: Fallback to live statuses if available
-                else if (liveStatuses && Object.keys(liveStatuses).length > 0) {
-                    console.log("No pump configs found, falling back to live statuses");
-                    Object.values(liveStatuses).forEach(status => {
-                        const grade = status.FuelGradeName || status.LastFuelGradeName;
-                        const nozzle = status.Nozzle || status.LastNozzle || 1;
-                        const price = status.Price || status.LastPrice || 0;
+            ];
 
-                        if (grade) {
-                            addFuelType(grade, nozzle, price);
-                        }
-                    });
-                }
+            setFuelTypes(hardcodedFuels);
 
-                const types = Array.from(fuelTypeMap.values());
-                setFuelTypes(types);
-
-                // Set default selections if fuel types available
-                if (types.length > 0) {
-                    setFuelType(types[0].id);
-                    setSelectedNozzle(types[0].nozzle);
-                    setPricePerLiter(types[0].price);
-                }
-            } catch (err) {
-                console.error('Error loading pump configurations:', err);
-                setError('Failed to load pump configurations');
-            } finally {
-                setLoadingPumps(false);
-            }
+            // Default selection
+            setFuelType(hardcodedFuels[0].id);
+            setSelectedNozzle(hardcodedFuels[0].nozzle);
+            setPricePerLiter(hardcodedFuels[0].price);
+            setLoadingPumps(false);
         };
 
         loadPumpConfigs();
@@ -172,7 +120,7 @@ export default function PumpSimulator() {
     async function loadShiftTransactions(shiftId) {
         try {
             const transactions = await shiftsApi.getTransactions(shiftId);
-            setShiftTransactions(transactions);
+            setShiftTransactions(Array.isArray(transactions) ? transactions : []);
         } catch (err) {
             console.error('Error loading shift transactions:', err);
         }
@@ -202,7 +150,7 @@ export default function PumpSimulator() {
         setPricePerLiter(fuel.price);
     }
 
-    // Handle pump authorization
+    // Handle pump authorization (Local Simulation)
     async function handleAuthorizePump() {
         if (!attendant || !shift) {
             setError('Please login and ensure you have an active shift');
@@ -218,29 +166,34 @@ export default function PumpSimulator() {
         setError(null);
 
         try {
-            const employeeId = attendant.employee?.id || attendant.employee_id;
-
-            await fuelApi.authorizePump(selectedPump, {
-                nozzleNumber: selectedNozzle,
-                presetType,
-                presetDose: parseFloat(presetValue),
-                price: pricePerLiter,
-                authorized_by_employee_id: employeeId,
-                station_id: currentStation.id,
-            });
-
-            // Set active transaction for monitoring
+            // Local Simulation: Start immediately with Filling status
             const selectedFuelTypeConfig = fuelTypes.find(f => f.id === fuelType);
+            const employeeName = attendant?.employee?.first_name || 'Attendant';
+
+            // Sync Authorization
+            updatePumpStatus(selectedPump, {
+                Pump: selectedPump,
+                State: 'Authorized',
+                Status: 'Authorized',
+                Nozzle: selectedNozzle,
+                Volume: 0,
+                Amount: 0,
+                Price: pricePerLiter,
+                User: employeeName,
+                Transaction: 99999 // Dummy ID
+            });
 
             setActiveTransaction({
                 pumpNumber: selectedPump,
                 nozzleNumber: selectedNozzle,
                 fuelType: fuelType,
-                fuelGradeId: selectedFuelTypeConfig?.fuelGradeId, // Store fuel grade ID
+                fuelGradeId: selectedFuelTypeConfig?.fuelGradeId,
                 presetType,
                 presetValue: parseFloat(presetValue),
                 price: pricePerLiter,
-                status: 'Authorized',
+                volume: 0,
+                amount: 0,
+                status: 'Filling', // Start directly in filling for demo
             });
 
             // Reset form
@@ -253,62 +206,120 @@ export default function PumpSimulator() {
         }
     }
 
-    // Monitor active transaction
+    // Local Simulation Loop (Auto-Finalize version) & Global Sync
     useEffect(() => {
         if (!activeTransaction) return;
 
-        const pumpNumber = activeTransaction.pumpNumber;
-        const liveStatus = liveStatuses[pumpNumber] || liveStatuses[String(pumpNumber)];
-
-        if (!liveStatus) return;
-
-        // Check if we need to update to avoid infinite loops
-        const currentVolume = liveStatus.Volume || 0;
-        const currentAmount = liveStatus.Amount || 0;
-        const currentStatus = liveStatus.State || liveStatus.Status || 'Unknown';
-
-        // Only update if values have changed
-        if (
-            currentVolume !== activeTransaction.volume ||
-            currentAmount !== activeTransaction.amount ||
-            currentStatus !== activeTransaction.status
-        ) {
-            const updatedTransaction = {
-                ...activeTransaction,
-                volume: currentVolume,
-                amount: currentAmount,
-                status: currentStatus,
-            };
-            setActiveTransaction(updatedTransaction);
-
-            // Check if transaction is complete
-            if (currentStatus === 'Idle' && activeTransaction.status === 'Complete') {
-                // Transaction finished, reload shift transactions
-                if (shift) {
-                    loadShiftTransactions(shift.id);
-                }
-                setActiveTransaction(null);
-            }
+        // Auto-finalize if Complete
+        if (activeTransaction.status === 'Complete') {
+            handleFinalizeTransaction();
+            return;
         }
-    }, [liveStatuses, activeTransaction, shift]);
 
-    // Handle finalize transaction
+        if (activeTransaction.status !== 'Filling') return;
+
+        const interval = setInterval(() => {
+            setActiveTransaction(prev => {
+                if (!prev || prev.status !== 'Filling') return prev;
+
+                const fillRate = 0.5; // Liters per tick
+                let newVolume = prev.volume + fillRate;
+                let newAmount = newVolume * prev.price;
+                let finished = false;
+
+                // Check limits based on preset
+                if (prev.presetType === 'Volume') {
+                    if (newVolume >= prev.presetValue) {
+                        newVolume = prev.presetValue;
+                        newAmount = newVolume * prev.price;
+                        finished = true;
+                    }
+                } else { // Amount
+                    if (newAmount >= prev.presetValue) {
+                        newAmount = prev.presetValue;
+                        newVolume = newAmount / prev.price;
+                        finished = true;
+                    }
+                }
+
+                // Sync with Global Context for Pumps Page
+                const fuelName = fuelTypes.find(f => f.id === prev.fuelType)?.name || '';
+                const employeeName = attendant?.employee?.first_name || 'Attendant';
+
+                updatePumpStatus(prev.pumpNumber, {
+                    Pump: prev.pumpNumber,
+                    State: finished ? 'Finished' : 'Filling', // PTS State
+                    Status: finished ? 'Finished' : 'Filling',
+                    Nozzle: prev.nozzleNumber,
+                    Volume: newVolume,
+                    Amount: newAmount,
+                    Price: prev.price,
+                    FuelGradeName: fuelName,
+                    User: employeeName,
+                    Transaction: 99999 // Dummy Transaction ID required by PumpsPage active detection
+                });
+
+                return {
+                    ...prev,
+                    volume: newVolume,
+                    amount: newAmount,
+                    status: finished ? 'Complete' : 'Filling'
+                };
+            });
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [activeTransaction?.status]);
+
+    // Handle finalize transaction (Manual Local Update ONLY)
     async function handleFinalizeTransaction() {
         if (!activeTransaction) return;
 
         try {
-            await fuelApi.closeTransaction(activeTransaction.pumpNumber);
+            const employeeId = attendant.employee?.id || attendant.employee_id;
 
-            // Reload shift transactions
-            if (shift) {
-                loadShiftTransactions(shift.id);
-            }
+            // Create transaction object for Local display only
+            const newTransaction = {
+                station_id: currentStation.id,
+                pts_controller_id: null,
+                pts_transaction_id: Math.floor(Math.random() * 100000),
+                pump_number: activeTransaction.pumpNumber,
+                nozzle: activeTransaction.nozzleNumber,
+                volume: activeTransaction.volume,
+                amount: activeTransaction.amount,
+                price: activeTransaction.price,
+                authorized_by_employee_id: employeeId || "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                // Additional fields for UI display
+                id: `temp-${Date.now()}`,
+                created_at: new Date().toISOString(),
+                fuel_grade_name: fuelTypes.find(f => f.id === activeTransaction.fuelType)?.name || 'Unknown',
+                total_amount: activeTransaction.amount,
+                liters: activeTransaction.volume
+            };
+
+            // SKIPPED: await fuelTransactionsApi.register(newTransaction);
+            // We now only update local state as requested, NO API CALL.
+
+            // Manually update local state for immediate UI reflection
+            setShiftTransactions(prev => [newTransaction, ...(Array.isArray(prev) ? prev : [])]);
+
+            // Reset Global Pump Status to Idle
+            updatePumpStatus(activeTransaction.pumpNumber, {
+                Pump: activeTransaction.pumpNumber,
+                State: 'Idle',
+                Status: 'Idle',
+                Nozzle: 0,
+                Volume: 0,
+                Amount: 0,
+                Transaction: 0 // Clear ID
+            });
 
             setActiveTransaction(null);
             setError(null);
+            // Removed alert/console log for cleaner "auto" flow
         } catch (err) {
             console.error('Error finalizing transaction:', err);
-            setError('Failed to finalize transaction: ' + (err.response?.data?.message || err.message));
+            setError('Failed to finalize transaction: ' + (err.message));
         }
     }
 

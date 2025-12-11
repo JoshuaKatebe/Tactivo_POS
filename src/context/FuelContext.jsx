@@ -43,6 +43,45 @@ export const FuelProvider = ({ children }) => {
         fetchData();
     }, []);
 
+    // DUMMY STATE for Pumps (Linked to Simulator)
+    const [dummyPumps, setDummyPumps] = useState(() => {
+        // Initialize 20 dummy pumps
+        const initial = {};
+        for (let i = 1; i <= 20; i++) {
+            initial[i] = {
+                Pump: i,
+                State: 'Idle',
+                Status: 'Idle',
+                Nozzle: 0,
+                Volume: 0,
+                Amount: 0,
+                Price: 0,
+                FuelGradeName: '',
+                User: ''
+            };
+        }
+        return initial;
+    });
+
+    // Provide update method for Simulator
+    const updatePumpStatus = (pumpNumber, statusObj) => {
+        setDummyPumps(prev => ({
+            ...prev,
+            [pumpNumber]: {
+                ...prev[pumpNumber],
+                ...statusObj
+            }
+        }));
+    };
+
+    // Override pumps state with dummyPumps
+    useEffect(() => {
+        setPumps(dummyPumps);
+        setLoading(false); // Immediate load
+    }, [dummyPumps]);
+
+    // Disable real API fetching for now
+    /*
     // Poll for updates every 2 seconds (WebSocket is primary, but polling ensures we get updates)
     useEffect(() => {
         const interval = setInterval(() => {
@@ -51,84 +90,8 @@ export const FuelProvider = ({ children }) => {
 
         return () => clearInterval(interval);
     }, []);
-
-    // WebSocket Connection
-    useEffect(() => {
-        const connectToWs = () => {
-            // Assuming protocol logic relative to window or fixed config
-            // The guide says ws://<server-ip>:3000/ws
-            // We'll trust the guide's explicit port/path, but usually it might be dynamic in prod
-            const wsUrl = `ws://${window.location.hostname}:3000/ws`;
-
-            console.log("Connecting to WebSocket:", wsUrl);
-            ws.current = new WebSocket(wsUrl);
-
-            ws.current.onopen = () => {
-                console.log("Fuel WebSocket Connected");
-                setConnected(true);
-            };
-
-            ws.current.onclose = () => {
-                console.log("Fuel WebSocket Disconnected");
-                setConnected(false);
-                // Reconnect after 3s
-                setTimeout(connectToWs, 3000);
-            };
-
-            ws.current.onerror = (err) => {
-                console.error("Fuel WebSocket Error:", err);
-                ws.current.close();
-            };
-
-            ws.current.onmessage = (event) => {
-                try {
-                    const msg = JSON.parse(event.data);
-                    handleWsMessage(msg);
-                } catch (e) {
-                    console.error("Failed to parse WS message:", e);
-                }
-            };
-        };
-
-        connectToWs();
-
-        return () => {
-            if (ws.current) {
-                ws.current.close();
-            }
-        };
-    }, []);
-
-    const handleWsMessage = (msg) => {
-        switch (msg.type) {
-            case "pumpStatus":
-                // msg.data.status is the pump object
-                // msg.data.pump is the ID
-                setPumps((prev) => ({
-                    ...prev,
-                    [msg.data.pump]: msg.data.status,
-                }));
-                break;
-
-            case "tankStatus":
-                // msg.data.status is the tank object
-                // msg.data.tank is the ID
-                setTanks((prev) => ({
-                    ...prev,
-                    [msg.data.tank]: msg.data.status,
-                }));
-                break;
-
-            case "transaction":
-                // Handle completed transaction if needed globally (e.g. toast notification)
-                console.log("New Transaction:", msg.data);
-                break;
-
-            default:
-                // Ignore unknown
-                break;
-        }
-    };
+    // WebSocket Connection ... (Disabled)
+    */
 
     // Actions
     const authorizePump = async (pumpId, params) => {
@@ -168,7 +131,8 @@ export const FuelProvider = ({ children }) => {
         connected,
         authorizePump,
         stopPump,
-        emergencyStop
+        emergencyStop,
+        updatePumpStatus // Export for Simulator
     };
 
     return <FuelContext.Provider value={value}>{children}</FuelContext.Provider>;

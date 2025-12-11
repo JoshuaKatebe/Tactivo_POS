@@ -78,6 +78,11 @@ export const fuelTransactionsApi = {
     return await apiClient.post('/fuel-transactions', data);
   },
 
+  // Register transaction (Manual/Simulator)
+  register: async (data) => {
+    return await apiClient.post('/fuel-transactions/register', data);
+  },
+
   // Mark transaction as synced
   markSynced: async (id) => {
     return await apiClient.post(`/fuel-transactions/${id}/sync`);
